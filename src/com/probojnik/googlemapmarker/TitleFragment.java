@@ -23,10 +23,10 @@ public class TitleFragment extends DialogFragment implements OnClickListener {
 	
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-    	index = getArguments().getInt("index", -1);
-    	title = getArguments().getString("title");
-    	snippet = getArguments().getString("snippet");
-    	latLng = getArguments().getParcelable("latLng");
+    	index = getArguments().getInt(MarkerBean.MB.INDEX.v, -1);
+    	title = getArguments().getString(MarkerBean.MB.TITLE.v);
+    	snippet = getArguments().getString(MarkerBean.MB.SNIPPET.v);
+    	latLng = getArguments().getParcelable(MarkerBean.MB.LATLNG.v);
 
         view = getActivity().getLayoutInflater().inflate(R.layout.fragment_title, null);
         editText1 = (EditText) view.findViewById(R.id.editText1);
@@ -35,11 +35,11 @@ public class TitleFragment extends DialogFragment implements OnClickListener {
         if(title != null) editText1.setText(title);
         if(snippet != null) editText2.setText(snippet);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity()).setTitle((index<0)?"Add":"Update")
-        .setPositiveButton("Save", this).setNeutralButton("Cancel", null).setView(view);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity()).setTitle((index<0)?getResources().getString(R.string.add):getResources().getString(R.string.update))
+        .setPositiveButton(getResources().getString(R.string.save), this).setNeutralButton(getResources().getString(R.string.cancel), null).setView(view);
         
         if(latLng != null) builder.setMessage(latLng.toString());
-        if(index > 0) builder.setNegativeButton("Delete", this);
+        if(index > 0) builder.setNegativeButton(getResources().getString(R.string.delete), this);
                 
         return builder.create();
 
@@ -49,7 +49,6 @@ public class TitleFragment extends DialogFragment implements OnClickListener {
 	public void onClick(DialogInterface arg0, int arg1) {
 		switch (arg1) {
 	    case Dialog.BUTTON_POSITIVE:
-	    	
 	    	((MainActivity) getActivity()).dialogMethod(latLng, index,(byte) (index<0 ?1:2), editText1.getText().toString(), editText2.getText().toString());
 	      break;
 	    case Dialog.BUTTON_NEGATIVE:
@@ -58,7 +57,6 @@ public class TitleFragment extends DialogFragment implements OnClickListener {
 	    default:
 	      break;
 	    }
-//		arg0.dismiss();
 	}
 
 

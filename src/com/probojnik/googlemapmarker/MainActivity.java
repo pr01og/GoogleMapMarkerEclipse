@@ -80,9 +80,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener 
         ab.setDisplayHomeAsUpEnabled(true);
         ab.setHomeButtonEnabled(true);
         
-//        markers = new HashMap<LatLng, Marker>();		
         markers = new ArrayList<MarkerBean>();
-//        adapter = new MarkerAdapter(this, markers);
         adapter = new MarkerBeanAdapter(this, markers);
         		
         
@@ -91,7 +89,6 @@ public class MainActivity extends ActionBarActivity implements LocationListener 
         mDrawerList.getLayoutParams().width = metrics.widthPixels * 2 / 3;
         mDrawerList.setAdapter( adapter );
         mDrawerList.setOnItemClickListener(new OnItemClickListener() {
-
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 			    MarkerBean mb = (MarkerBean) mDrawerList.getItemAtPosition(position);
@@ -106,7 +103,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener 
             }
 
             public void onDrawerOpened(View drawerView) {
-            	ab.setTitle("Second Screen");
+            	ab.setTitle(getResources().getString(R.string.second_screen));
             	supportInvalidateOptionsMenu();
             }
         };
@@ -156,60 +153,47 @@ public class MainActivity extends ActionBarActivity implements LocationListener 
     
     void retainState(){ // add Data to SQLite
     	SQLiteDatabase db = dbHelper.getWritableDatabase();  // query to the database on UI. this is very bad. I know
-    	db.delete("markers", null, null);
+    	db.delete(DBHelper.DB_TABLE, null, null);
     	ContentValues cv = new ContentValues();
     	
     	Iterator<MarkerBean> iterator = markers.iterator();
-    	Log.d("log1", "retainState " + iterator.hasNext() + " - " + markers.size());
 		while (iterator.hasNext()) {
 			MarkerBean marker = iterator.next();
 			
-			cv.put("latitude", marker.getMarker().getPosition().latitude);
-            cv.put("longitude", marker.getMarker().getPosition().longitude);
-            cv.put("title", marker.getMarker().getTitle());
-            cv.put("snippet", marker.getMarker().getSnippet());
-            db.insert("markers", null, cv);
-            Log.d("log1", "retainState " + marker.getMarker().getTitle() );
+			cv.put(DBHelper.Tables.LATITUDE.getTable(), marker.getMarker().getPosition().latitude);
+            cv.put(DBHelper.Tables.LONGITUDE.getTable(), marker.getMarker().getPosition().longitude);
+            cv.put(DBHelper.Tables.TITLE.getTable(), marker.getMarker().getTitle());
+            cv.put(DBHelper.Tables.SNIPPET.getTable(), marker.getMarker().getSnippet());
+            db.insert(DBHelper.DB_TABLE, null, cv);
 		}
 
         dbHelper.close();
     }
     
     void insertDB(MarkerBean mb){
-    	Log.d("log1", "insertDB " + mb.getMarker().getTitle());
     	SQLiteDatabase db = dbHelper.getWritableDatabase();
     	ContentValues cv = new ContentValues();
-    	cv.put("latitude", mb.getMarker().getPosition().latitude);
-        cv.put("longitude", mb.getMarker().getPosition().longitude);
-        cv.put("title", mb.getMarker().getTitle());
-        cv.put("snippet", mb.getMarker().getSnippet());
-        cv.put("mid", mb.getMarker().getId());
-        db.insert("markers", null, cv);
+    	cv.put(DBHelper.Tables.LATITUDE.getTable(), mb.getMarker().getPosition().latitude);
+        cv.put(DBHelper.Tables.LONGITUDE.getTable(), mb.getMarker().getPosition().longitude);
+        cv.put(DBHelper.Tables.TITLE.getTable(), mb.getMarker().getTitle());
+        cv.put(DBHelper.Tables.SNIPPET.getTable(), mb.getMarker().getSnippet());
+        cv.put(DBHelper.Tables.MID.getTable(), mb.getMarker().getId());
+        db.insert(DBHelper.DB_TABLE, null, cv);
         dbHelper.close();
-        
-        
-        db = dbHelper.getWritableDatabase();
-    	Cursor c = db.query("markers", null, null, null, null, null, null);
-    	Log.d("log1", "123123 " + c.getCount());
-    	if (c.moveToFirst()) {
-    		do {
-		    	Log.d("log1", "123123 " + c.getString( c.getColumnIndex("title") ));
-	        } while (c.moveToNext());
-    	}
     }
     
     void updateDB(MarkerBean mb, String title, String snippet){
     	SQLiteDatabase db = dbHelper.getWritableDatabase();
     	ContentValues cv = new ContentValues();
-        cv.put("title", title);
-        cv.put("snippet", snippet);
-    	db.update("markers", cv, "mid = ?", new String[] {  mb.getMarker().getId() });
+        cv.put(DBHelper.Tables.TITLE.getTable(), title);
+        cv.put(DBHelper.Tables.SNIPPET.getTable(), snippet);
+    	db.update(DBHelper.DB_TABLE, cv, DBHelper.Tables.MID.getTable()+" = ?", new String[] {  mb.getMarker().getId() });
     	dbHelper.close();
     }
     
     void deleteDB(MarkerBean mb){
     	SQLiteDatabase db = dbHelper.getWritableDatabase();
-    	db.delete("markers", "mid = ?", new String[] {  mb.getMarker().getId() });
+    	db.delete(DBHelper.DB_TABLE, DBHelper.Tables.MID.getTable()+" = ?", new String[] {  mb.getMarker().getId() });
     	dbHelper.close();
     }
     
@@ -218,14 +202,13 @@ public class MainActivity extends ActionBarActivity implements LocationListener 
     	markers.clear();
     	
     	SQLiteDatabase db = dbHelper.getWritableDatabase();
-    	Cursor c = db.query("markers", null, null, null, null, null, null);
+    	Cursor c = db.query(DBHelper.DB_TABLE, null, null, null, null, null, null);
     	
-    	Log.d("log1", "revertState " + c.getCount());
     	if (c.moveToFirst()) {
-    		int latitude = c.getColumnIndex("latitude");
-    		int longitude = c.getColumnIndex("longitude");
-    		int title = c.getColumnIndex("title");
-    		int snippet = c.getColumnIndex("snippet");
+    		int latitude = c.getColumnIndex(DBHelper.Tables.LATITUDE.getTable());
+    		int longitude = c.getColumnIndex(DBHelper.Tables.LONGITUDE.getTable());
+    		int title = c.getColumnIndex(DBHelper.Tables.TITLE.getTable());
+    		int snippet = c.getColumnIndex(DBHelper.Tables.SNIPPET.getTable());
     		
     		do {
 				LatLng latLng = new LatLng(c.getDouble(latitude), c.getDouble(longitude));
@@ -234,7 +217,6 @@ public class MainActivity extends ActionBarActivity implements LocationListener 
 				mb.addMarker(map, latLng, c.getString(title), c.getString(snippet));
 				markers.add(mb);
 				
-		    	Log.d("log1", "revertState " + c.getString(title));
 	        } while (c.moveToNext());
 
 		}
@@ -255,7 +237,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener 
     	}
 
 	    public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-	      menu.add(0, 123, 0, "Done");
+	      menu.add(0, 123, 0, getResources().getString(R.string.done));
 	      return true;
 	    }
 
@@ -310,7 +292,7 @@ public class MainActivity extends ActionBarActivity implements LocationListener 
     
     Bundle showDialogAdd(LatLng latLng) {
     	Bundle args = new Bundle();
-        args.putParcelable("latLng", latLng);
+        args.putParcelable(MarkerBean.MB.LATLNG.v, latLng);
         return args;
     }
     
@@ -320,9 +302,9 @@ public class MainActivity extends ActionBarActivity implements LocationListener 
     	if(indexArray(m) < 0) showDialogAdd(m.getPosition());
     	MarkerBean mb = markers.get(indexArray(m));
     	
-        args.putInt("index", indexArray(m));
-        args.putString("title", mb.getMarker().getTitle());
-        args.putString("snippet", mb.getMarker().getSnippet());
+        args.putInt(MarkerBean.MB.INDEX.v, indexArray(m));
+        args.putString(MarkerBean.MB.TITLE.v, mb.getMarker().getTitle());
+        args.putString(MarkerBean.MB.SNIPPET.v, mb.getMarker().getSnippet());
         
         return args;
     }
@@ -332,12 +314,12 @@ public class MainActivity extends ActionBarActivity implements LocationListener 
     	
         TitleFragment titleFragment = new TitleFragment();
         titleFragment.setArguments(args);
-		titleFragment.show(fragmentManager, "TitleFragment");    
+		titleFragment.show(fragmentManager, getResources().getString(R.string.title_fragment));    
 	}
     
 	@Override
 	public void onLocationChanged(Location location) {
-		map.clear();// clean the map
+		map.clear();
         double latitude = location.getLatitude();
         double longitude = location.getLongitude();
         LatLng myPosition = new LatLng(latitude, longitude);

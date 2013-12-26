@@ -19,7 +19,7 @@ public class MarkerBean {
 		.snippet(snippet)
 		.icon( BitmapDescriptorFactory.fromResource(R.drawable.ic_launcher) )
 		.alpha(0.7f)
-        .rotation(90.0f) ); 
+        .rotation(30.0f) ); 
 	}
 	
 	public void updMarker(String title, String snippet){
@@ -35,6 +35,19 @@ public class MarkerBean {
 	
 	public Marker getMarker() {
 		return marker;
+	}
+	
+	public enum MB {
+		INDEX("index"),
+		TITLE("title"),
+		SNIPPET("snippet"),
+		LATLNG("latLng");
+		
+		final String v;
+
+		MB(String v) {
+			this.v = v;
+		}
 	}
 	
 }
